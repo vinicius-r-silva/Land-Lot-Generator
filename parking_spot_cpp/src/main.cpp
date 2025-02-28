@@ -1,21 +1,25 @@
 #include <utility>
 // #include <vector>
 #include <iostream>
+#include <omp.h>
 #include <parking_spot_cpp/lib/globals.h>
 #include <parking_spot_cpp/lib/gui.h>
 #include <parking_spot_cpp/lib/logger.h>
 #include <parking_spot_cpp/lib/poly.h>
+#include <parking_spot_cpp/lib/layout.h>
 #include <parking_spot_cpp/lib/rect.h>
 #include <parking_spot_cpp/lib/vector.h>
+#include <climits>
 
-// using std::vector;
+// TODO removeFromGlobal
+histogramConfig histConfig;
 
 vector<point> getTerrain();
 vector<layout> getInitialLayouts(const vector<point> &terrain);
 vector<rect> createSpotsGivenRect(rect r, const vector<point> &terrain);
 
-void removeDuplicatesUnsorted(std::vector<layout>& vec) {
-  std::vector<layout> uniqueVec;
+void removeDuplicatesUnsorted(vector<layout>& vec) {
+  vector<layout> uniqueVec;
 
   for (const auto& item : vec) {
       if (std::find(uniqueVec.begin(), uniqueVec.end(), item) == uniqueVec.end()) {
@@ -31,13 +35,26 @@ int main() {
   vector<layout> layouts = getInitialLayouts(terrain);
   vector<layout> newLayouts = {};
   vector<layout> completeLayouts = {};
+  omp_set_num_threads(28);
+  std::vector<std::vector<layout>> threadLocalResults(omp_get_max_threads());
+  
 
-  int i = 0;
-  while (layouts.size() && i < 10) {
-    for (layout l : layouts) {
-      // std::cout << std::endl << std::endl << "layout: " << std::endl;
-      // logger::print(l);
+  // int i = 0;
+  // while (layouts.size() && i < 10) {
+  
+  int count = 0;
+  while (layouts.size() > 0 && count < 10) {
+    int i = 0;
+    const int n = layouts.size();
+    std::cout << "for start" << std::endl;
+    for(std::vector<layout> threadLocalResult : threadLocalResults) {
+      threadLocalResult.clear();
+    }
 
+    #pragma omp parallel for
+    for (i = 0; i < n; i++) {
+      int tid = omp_get_thread_num();
+      layout l = layouts[i];
       vector<rect> newSpots;
       for (rect spot : l.spots) {
         newSpots.push_recursive(createSpotsGivenRect(spot, terrain));
@@ -48,64 +65,78 @@ int main() {
         continue;
       }
 
-      // std::cout << std::endl << "newSpots 1: " << std::endl;
-      // logger::print(newSpots);
       newSpots.sort();
       newSpots.remove_duplicates();
 
-      // std::cout << std::endl << "newSpots 2: " << std::endl;
-      // logger::print(newSpots);
-
+      vector<layout> localNewLayouts;
+      // threadLocalResults[tid].clear();
       for (rect newSpot : newSpots) {
         layout newLayout = l;
 
         newLayout.spots.push_sorted(newSpot);
-        // if (std::find(completeLayouts.begin(), completeLayouts.end(), newLayout) != completeLayouts.end())
-        //   continue;
-        // if(newLayout.spots.size() == 3){
-        //   std::cout << std::endl << "------------------------" << std::endl;
-        //   std::cout << "newLayout 1: " << std::endl;
-        //   logger::print(newLayout);
-        //   newLayout.spots.remove_duplicates();
-        //   std::cout << std::endl << "newLayout 2: " << std::endl;
-        //   logger::print(newLayout);
-        // } else {
-          newLayout.spots.remove_duplicates();
-        // }
-
-        // replace this with overlap check
-        // if(newLayout.spots.size() == 3){
-        // }
-        // newLayout.spots.push_back(newSpot);
-        newLayouts.push_back(newLayout);
+        newLayout.spots.remove_duplicates();
+        // newLayouts.push_back(newLayout);
+        localNewLayouts.push_sorted(newLayout);
       }
+      
+      std::vector<layout> mergedVec(threadLocalResults[tid].size() + localNewLayouts.size());
+      std::merge(threadLocalResults[tid].begin(), threadLocalResults[tid].end(), localNewLayouts.begin(), localNewLayouts.end(), mergedVec.begin());
+      threadLocalResults[tid].swap(mergedVec);
+
+      // threadLocalResults[tid].insert(threadLocalResults[tid].end(), 
+      //                          localNewLayouts.begin(), 
+      //                          localNewLayouts.end());
+      // threadLocalResults[tid].assign;
+
+      // #pragma omp critical
+      // {
+        // std::cout << "start merge" << std::endl;
+        // std::vector<layout> mergedVec(newLayouts.size() + localNewLayouts.size());
+        // std::merge(newLayouts.begin(), newLayouts.end(), localNewLayouts.begin(), localNewLayouts.end(), mergedVec.begin());
+        // newLayouts.assign(mergedVec.begin(),mergedVec.end());
+        // newLayouts.remove_duplicates();
+        // std::cout << "end merge" << std::endl;
+
+      //   newLayouts.insert(newLayouts.end(), localNewLayouts.begin(), localNewLayouts.end());
+      // }
     }
 
-    // std::cout << std::endl << "newLayouts : " << std::endl;
-    // logger::print(newLayouts);
+    newLayouts.clear();
+    for (const auto& threadResult : threadLocalResults) {
+      if (!threadResult.empty()) {
+        std::vector<layout> mergedVec(newLayouts.size() + threadResult.size());
+        std::merge(newLayouts.begin(), newLayouts.end(), 
+                  threadResult.begin(), threadResult.end(), 
+                  mergedVec.begin());
+        newLayouts.swap(mergedVec);
+      }
+    }
+    // layouts = {};
 
     std::cout << "newLayouts size 1: " << newLayouts.size() << std::endl;
-    // newLayouts.remove_duplicates_unsorted();
-    removeDuplicatesUnsorted(newLayouts);
+    // removeDuplicatesUnsorted(newLayouts);
+    // newLayouts.sort();
+    newLayouts.remove_duplicates();
     std::cout << "newLayouts size 2: " << newLayouts.size() << std::endl;
     layouts = newLayouts;
-    i++;
+    count++;
   }
 
   std::cout << "layouts: " << std::endl; 
   gui::imgshowLayouts(layouts, terrain);
 
-  removeDuplicatesUnsorted(completeLayouts);
+  // removeDuplicatesUnsorted(completeLayouts);
   std::cout << "completeLayouts: " << std::endl; 
   gui::imgshowLayouts(completeLayouts, terrain);
   // gui::imgshowLayouts(newLayouts, terrain);
 }
 
+
 vector<point> getTerrain() {
   point p1 = {0, 0};
-  point p2 = {0, 25};
-  point p3 = {20, 25};
-  point p4 = {20, 0};
+  point p2 = {0, 10};
+  point p3 = {10, 10};
+  point p4 = {10, 0};
   vector<point> terrain = {{p1, p2, p3, p4}};
   for (point &p : terrain) {
     p.x = p.x * METER_TO_UNIT;
@@ -113,6 +144,31 @@ vector<point> getTerrain() {
   }
 
   return terrain;
+}
+
+void setHistConfig(vector<point> terrain) {
+  int terrain_min_x = INT_MAX;
+  int terrain_min_y = INT_MAX;
+  int terrain_max_x = INT_MIN;
+  int terrain_max_y = INT_MIN;
+
+  for(point p : terrain) {
+    if(p.x > terrain_min_x) terrain_min_x = p.x;
+    if(p.y > terrain_min_y) terrain_min_y = p.y;
+    if(p.x > terrain_max_x) terrain_max_x = p.x;
+    if(p.y > terrain_max_y) terrain_max_y = p.y;
+  }
+
+  const int diff_x = terrain_max_x - terrain_min_x;
+  const int diff_y = terrain_max_y - terrain_min_y;
+
+  const int histogram_bin_size_x = diff_x / HISTOGRAM_SIZE;
+  const int histogram_bin_size_y = diff_y / HISTOGRAM_SIZE;
+
+  for(int i = 0; i < HISTOGRAM_SIZE - 1; i++) {
+    histConfig.x[i] = terrain_min_x + ((i + 1) * histogram_bin_size_x);
+    histConfig.y[i] = terrain_min_y + ((i + 1) * histogram_bin_size_y);
+  }
 }
 
 vector<rect> createSpotsGivenRect(rect r, const vector<point> &terrain) {
@@ -251,7 +307,7 @@ vector<layout> getInitialLayouts(const vector<point> &terrain) {
   // TODO create combination layouts
   vector<layout> layouts;
   for (rect r : possible_spots) {
-    layouts.push_back({{{r}}, {{}}});
+    layouts.push_back({{{r}}, {{}}, histConfig});
   }
 
   vector<layout> temp = {{layouts[0]}};

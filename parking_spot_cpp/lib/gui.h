@@ -4,6 +4,7 @@
 // #include <vector>
 #include <parking_spot_cpp/lib/vector.h>
 #include <parking_spot_cpp/lib/rect.h>
+#include <parking_spot_cpp/lib/layout.h>
 #include <parking_spot_cpp/lib/globals.h>
 
 class gui {

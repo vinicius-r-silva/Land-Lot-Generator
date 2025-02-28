@@ -1,7 +1,7 @@
 #ifndef RECT_H
 #define RECT_H
 
-#include <parking_spot_cpp/lib/vector.h>
+// #include <parking_spot_cpp/lib/vector.h>
 // struct point {
 //     int x, y;
 //     // point(int x = 0, int y = 0) : x(x), y(y) {}
@@ -22,23 +22,23 @@ public:
 };
 
 
-class layout {
-  public:
-  vector<rect> spots, roads;
+// class layout {
+//   public:
+//   vector<rect> spots, roads;
   
-  layout(vector<rect> spots, vector<rect> roads);
-  bool operator==(const layout& other) const;
-};
-// struct layout {
-// // public:
-//     vector<rect> spots, roads;
-
-//     // layout(vector<rect> spots, vector<rect> roads) : spots(spots), roads(roads) {}
+//   layout(vector<rect> spots, vector<rect> roads);
+//   bool operator==(const layout& other) const;
 // };
+// // struct layout {
+// // // public:
+// //     vector<rect> spots, roads;
 
-// typedef struct {
-//     vector<rect> spots;
-//     vector<rect> roads;
-// } layout;
+// //     // layout(vector<rect> spots, vector<rect> roads) : spots(spots), roads(roads) {}
+// // };
+
+// // typedef struct {
+// //     vector<rect> spots;
+// //     vector<rect> roads;
+// // } layout;
 
 #endif // RECT_H

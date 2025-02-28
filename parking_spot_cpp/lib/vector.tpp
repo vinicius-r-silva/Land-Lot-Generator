@@ -1,5 +1,6 @@
 #include <parking_spot_cpp/lib/vector.h>
 #include <parking_spot_cpp/lib/globals.h>
+#include <parking_spot_cpp/lib/layout.h>
 #include <algorithm>
 #include <set>
 

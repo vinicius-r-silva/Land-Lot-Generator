@@ -1,9 +1,7 @@
-
+#include <iostream>
 #include <parking_spot_cpp/lib/poly.h>
 #include <parking_spot_cpp/lib/logger.h>
 #include <parking_spot_cpp/lib/globals.h>
-#include <iostream>
-// #include <vector>
 #include <parking_spot_cpp/lib/vector.h>
 #include <parking_spot_cpp/lib/rect.h>
 

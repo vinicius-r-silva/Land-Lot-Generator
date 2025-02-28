@@ -8,19 +8,17 @@ bool rect::operator<(const rect &other) const {
 }
 
 bool rect::operator==(const rect &other) const {
-  return ((tl.x == other.tl.x && tl.y == other.tl.y &&
-           tr.x == other.tr.x && tr.y == other.tr.y &&
-           bl.x == other.bl.x && bl.y == other.bl.y &&
-           br.x == other.br.x && br.y == other.br.y) ||
+  // return ((tl.x == other.tl.x && tl.y == other.tl.y &&
+  //          tr.x == other.tr.x && tr.y == other.tr.y &&
+  //          bl.x == other.bl.x && bl.y == other.bl.y &&
+  //          br.x == other.br.x && br.y == other.br.y) ||
 
-          (tl.x == other.bl.x && tl.y == other.bl.y &&
-           tr.x == other.br.x && tr.y == other.br.y &&
-           bl.x == other.tl.x && bl.y == other.tl.y &&
-           br.x == other.tr.x && br.y == other.tr.y));
-}
-
-layout::layout(vector<rect> spots, vector<rect> roads) : spots(spots), roads(roads) {}
-
-bool layout::operator==(const layout &other) const {
-  return spots == other.spots && roads == other.roads;
+  //         (tl.x == other.bl.x && tl.y == other.bl.y &&
+  //          tr.x == other.br.x && tr.y == other.br.y &&
+  //          bl.x == other.tl.x && bl.y == other.tl.y &&
+  //          br.x == other.tr.x && br.y == other.tr.y));
+      return ((tl.x == other.tl.x && tl.y == other.tl.y &&
+              tr.x == other.tr.x && tr.y == other.tr.y &&
+              bl.x == other.bl.x && bl.y == other.bl.y &&
+              br.x == other.br.x && br.y == other.br.y));
 }
