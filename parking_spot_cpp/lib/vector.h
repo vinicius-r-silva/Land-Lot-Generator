@@ -9,7 +9,6 @@ class vector : public std::vector<T> {
 public:
     void push_sorted(const T& r);
     void push_recursive(const vector<T>& v2);
-    // void remove_duplicates_unsorted();
     void remove_duplicates();
     void sort();
 };

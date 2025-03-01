@@ -38,3 +38,19 @@ bool poly::isPointInsidePolygon(const point& p, const vector<point>& polygon) {
 
     return (intersections % 2) == 1;
 }
+
+bool poly::isRectangleInsideRectangle(const rect& r1, const rect& r2) {
+  // TODO add overlap with checkiung point inside rect
+  return ((r1.tl.x == r2.tl.x && r1.tl.y == r2.tl.y) || 
+     (r1.bl.x == r2.bl.x && r1.bl.y == r2.bl.y) || 
+     (r1.tr.x == r2.tr.x && r1.tr.y == r2.tr.y) || 
+     (r1.br.x == r2.br.x && r1.br.y == r2.br.y));
+}
+
+bool poly::isRectangleInsideRectangles(const rect& r, const vector<rect>& rects) {
+  for(rect layout_rect : rects) {
+    if(isRectangleInsideRectangle(r, layout_rect)) return true;
+  }
+
+  return false;
+}

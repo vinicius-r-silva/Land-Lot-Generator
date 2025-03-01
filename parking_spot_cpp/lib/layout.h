@@ -31,9 +31,7 @@ public:
 
   layout();
   void addSpot(rect spot);
-  // layout(histogramConfig &histConfig);
   layout(vector<rect> spots, vector<rect> roads, histogramConfig &histConfig);
-  // layout(vector<rect> spots, vector<rect> roads, histogramConfig &histConfig, std::array<std::array<int16_t, HISTOGRAM_SIZE>, HISTOGRAM_SIZE> hist);
   bool operator<(const layout &other) const;
   bool operator==(const layout &other) const;
 };
